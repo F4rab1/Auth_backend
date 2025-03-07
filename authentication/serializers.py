@@ -21,3 +21,7 @@ class RegistrationEmailSerializer(serializers.ModelSerializer):
 
 class RegistrationVerifyEmailSerializer(serializers.Serializer):
     token = serializers.CharField()
+
+    class Meta:
+        model = User
+        fields = ['token']
