@@ -5,13 +5,10 @@ from django.contrib.auth.models import AbstractBaseUser
 
 class UserManager(BaseUserManager):
     def create_user(self, email, username, password=None, **extra_fields):
-        if username is None:
-            username = email.split('@')[0]
         if email is None:
             raise ValueError('Users must have email')
 
         user = self.model(email=self.normalize_email(email), username=username, **extra_fields)
-        user.set_password(password)
         user.save(using=self._db)
 
         return user
@@ -31,7 +28,9 @@ class User(AbstractBaseUser):
     last_name = models.CharField(max_length=100)
     is_verified = models.BooleanField(default=False, null=True, blank=True)
     is_staff = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False, null=True, blank=True)
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(auto_now_add=True)
 
     USERNAME_FIELD = "email"
+    objects = UserManager()

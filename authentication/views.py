@@ -3,18 +3,20 @@ from rest_framework.response import Response
 from django.urls import reverse
 from django.contrib.sites.shortcuts import get_current_site
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 import jwt
 from .serializers import RegistrationEmailSerializer
 from .models import User
 
 
-class RegistrationEmailView(generics.CreateAPIView):
-    serializer_class = RegistrationEmailSerializer
-    permission_classes = [AllowAny]
-
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+@api_view(['GET', 'POST'])
+@permission_classes([AllowAny])
+def registration_email_view(request):
+    if request.method == 'GET':
+        return Response({"ok"})
+    elif request.method == 'POST':
+        serializer = RegistrationEmailSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
@@ -22,13 +24,19 @@ class RegistrationEmailView(generics.CreateAPIView):
 
         current_site = get_current_site(request).domain
         relative_link = reverse('verify-email')
-        absurl = f'http://{current_site}{relative_link}?token={token}'
+        absolute_link = f"http://{current_site}{relative_link}?token={token}"
 
-        return Response({"email": user.email, "verification_link": absurl}, status=status.HTTP_201_CREATED)
+        return Response({"email": user.email, "verification_link": absolute_link}, status=status.HTTP_201_CREATED)
 
 
 class VerifyEmailView(generics.CreateAPIView):
     print("Hello yeiuf")
+
+    def get_serializer_class(self):
+        return RegistrationEmailSerializer
+
+    def get(self, request, *args, **kwargs):
+        return Response({"ok"})
     # permission_classes = [AllowAny]  # Allow unauthenticated access
     #
     # def get(self, request, *args, **kwargs):
