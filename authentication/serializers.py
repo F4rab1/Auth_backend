@@ -25,3 +25,13 @@ class RegistrationVerifyEmailSerializer(serializers.Serializer):
     class Meta:
         model = User
         fields = ['token']
+
+
+class PasswordRegistrationSerializer(serializers.Serializer):
+    password = serializers.CharField(min_length=6, max_length=128, write_only=True)
+    password_repeat = serializers.CharField(min_length=6, max_length=128, write_only=True)
+
+    def validate(self, data):
+        if data['password'] != data['password_repeat']:
+            raise serializers.ValidationError("Passwords do not match.")
+        return data
