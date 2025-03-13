@@ -2,6 +2,7 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from django.urls import reverse
 from django.contrib.sites.shortcuts import get_current_site
+from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
@@ -78,3 +79,29 @@ def password_registration_view(request):
     user.save()
 
     return Response({"message": "Password updated successfully"}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def login_view(request):
+    email = request.data.get('email')
+    password = request.data.get('password')
+
+    if not email:
+        return Response({"error": "Email is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+    if not password:
+        return Response({"error": "Password is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+    user = authenticate(request, email=email, password=password)
+    if user is None:
+        return Response({"error": "Invalid email or password."}, status=status.HTTP_401_UNAUTHORIZED)
+
+    # Generate JWT tokens for the authenticated user
+    refresh = RefreshToken.for_user(user)
+    access_token = refresh.access_token
+
+    return Response({
+        "access": str(access_token),
+        "refresh": str(refresh)
+    }, status=status.HTTP_200_OK)
