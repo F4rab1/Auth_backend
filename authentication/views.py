@@ -7,7 +7,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 import jwt
-from .serializers import RegistrationEmailSerializer, PasswordRegistrationSerializer
+from .serializers import RegistrationEmailSerializer, RegistrationPasswordSerializer
 from .models import User
 from django.conf import settings
 
@@ -61,17 +61,20 @@ def registration_email_verify_view(request):
 
 @api_view(['PUT'])
 @permission_classes([AllowAny])
-def password_registration_view(request):
-    email = request.query_params.get('email')
-    if not email:
-        return Response({"error": "Email query parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+def registration_password_view(request):
+    token = request.query_params.get('token')
+    if not token:
+        return Response({"error": "Token is required."}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        user = User.objects.get(email=email)
-    except User.DoesNotExist:
-        return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+        user = User.objects.get(id=payload['user_id'])
+    except jwt.ExpiredSignatureError:
+        return Response({"error": "Token is expired"}, status=status.HTTP_400_BAD_REQUEST)
+    except (jwt.InvalidTokenError, User.DoesNotExist):
+        return Response({"error": "Token is invalid"}, status=status.HTTP_400_BAD_REQUEST)
 
-    serializer = PasswordRegistrationSerializer(data=request.data)
+    serializer = RegistrationPasswordSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
     new_password = serializer.validated_data['password']

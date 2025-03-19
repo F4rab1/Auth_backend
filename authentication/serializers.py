@@ -27,7 +27,7 @@ class RegistrationVerifyEmailSerializer(serializers.Serializer):
         fields = ['token']
 
 
-class PasswordRegistrationSerializer(serializers.Serializer):
+class RegistrationPasswordSerializer(serializers.Serializer):
     password = serializers.CharField(min_length=6, max_length=128, write_only=True)
     password_repeat = serializers.CharField(min_length=6, max_length=128, write_only=True)
 
