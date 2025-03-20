@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from django.urls import reverse
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.auth import authenticate
+from django.utils import timezone
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
@@ -100,7 +101,9 @@ def login_view(request):
     if user is None:
         return Response({"error": "Invalid email or password."}, status=status.HTTP_401_UNAUTHORIZED)
 
-    # Generate JWT tokens for the authenticated user
+    user.last_login = timezone.now()
+    user.save(update_fields=['last_login'])
+
     refresh = RefreshToken.for_user(user)
     access_token = refresh.access_token
 
